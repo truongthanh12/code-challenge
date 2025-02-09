@@ -1,0 +1,22 @@
+Issues
+1. Inconsistent typing: The `blockchain` parameter in `getPriority` is typed as `any`, which defeats the purpose of using TypeScript.
+2. Unnecessary re-renders: `useMemo` is used, but its dependency array only includes `balances` and `prices`, while it also depends on `getPriority`.
+3. Incorrect logic in `sortedBalances`: The filter condition is always `false` because it returns `true` only when `balance.amount <= 0`, but then returns `false` for all other cases.
+4. Inefficient sorting: The sort function doesn't handle the case when priorities are equal, which can lead to inconsistent sorting.
+5. Duplicate calculations: `getPriority` is called twice for each balance in the sort function.
+6. Unnecessary mapping: `formattedBalances` is created but never used.
+7. Inefficient use of `map`: `rows` are created using `map` on `sortedBalances`, but it should use `formattedBalances` instead.
+8. Anti-pattern in key usage: Using array index as key in React lists can lead to performance issues and bugs with dynamic lists.
+9. Prop spreading: The `...rest` spread in the return statement can potentially pass unwanted props to the div.
+
+Improvements in the refactored:
+
+1. Replaced `getPriority` function with a `BLOCKCHAIN_PRIORITIES` object for better performance and type safety.
+2. Fixed the filter logic to correctly handle priorities and positive balances.
+3. Improved sorting by using the difference between priorities.
+4. Combined filtering, sorting, and formatting into a single `useMemo` hook for better performance.
+5. Removed unused `formattedBalances` and directly use the result of `useMemo`.
+6. Used a combination of blockchain and currency as the key for `WalletRow` components.
+7. Removed unnecessary prop spreading and only passed the `className` prop.
+8. Improved TypeScript typing throughout the component.
+9. Moved `usdValue` calculation into the `useMemo` hook to avoid recalculation in render.

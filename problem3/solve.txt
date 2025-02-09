@@ -1,0 +1,63 @@
+interface WalletBalance {
+  currency: string
+  amount: number
+  blockchain: string
+}
+
+interface FormattedWalletBalance extends WalletBalance {
+  formatted: string
+  usdValue: number
+}
+
+interface Props {
+  className?: string
+}
+
+const BLOCKCHAIN_PRIORITIES: { [key: string]: number } = {
+  Osmosis: 100,
+  Ethereum: 50,
+  Arbitrum: 30,
+  Zilliqa: 20,
+  Neo: 20,
+}
+
+const WalletPage: React.FC<Props> = ({ className }) => {
+  const balances = useWalletBalances()
+  const prices = usePrices()
+
+  const formattedBalances = useMemo(() => {
+    return balances
+      .filter((balance: WalletBalance) => {
+        const priority = BLOCKCHAIN_PRIORITIES[balance.blockchain] ?? -99
+        return priority > -99 && balance.amount > 0
+      })
+      .sort((a: WalletBalance, b: WalletBalance) => {
+        const priorityA = BLOCKCHAIN_PRIORITIES[a.blockchain] ?? -99
+        const priorityB = BLOCKCHAIN_PRIORITIES[b.blockchain] ?? -99
+        return priorityB - priorityA
+      })
+      .map(
+        (balance: WalletBalance): FormattedWalletBalance => ({
+          ...balance,
+          formatted: balance.amount.toFixed(2),
+          usdValue: prices[balance.currency] * balance.amount,
+        }),
+      )
+  }, [balances, prices])
+
+  return (
+    <div className={className}>
+      {formattedBalances.map((balance: FormattedWalletBalance) => (
+        <WalletRow
+          key={`${balance.blockchain}-${balance.currency}`}
+          amount={balance.amount}
+          usdValue={balance.usdValue}
+          formattedAmount={balance.formatted}
+        />
+      ))}
+    </div>
+  )
+}
+
+export default WalletPage
+
